@@ -84,6 +84,7 @@ public final class MemcachedConnection extends SpyObject {
 		new ConcurrentLinkedQueue<ConnectionObserver>();
 	private final OperationFactory opFact;
 	private final int timeoutExceptionThreshold;
+	private final int timeoutRatioThreshold;
 
 	private BlockingQueue<String> _nodeManageQueue = new LinkedBlockingQueue<String>();
 	private final ConnectionFactory f;
@@ -126,6 +127,7 @@ public final class MemcachedConnection extends SpyObject {
 		maxDelay = f.getMaxReconnectDelay();
 		opFact = opfactory;
 		timeoutExceptionThreshold = f.getTimeoutExceptionThreshold();
+		timeoutRatioThreshold = f.getTimeoutRatioThreshold();
 		selector=Selector.open();
 		List<MemcachedNode> connections=new ArrayList<MemcachedNode>(a.size());
 		for(SocketAddress sa : a) {
@@ -252,6 +254,13 @@ public final class MemcachedConnection extends SpyObject {
 						mn.getSocketAddress().toString(), timeoutExceptionThreshold, mn.getStatus());
 				lostConnection(mn);
 			}
+			else if (timeoutRatioThreshold > 0 && mn.getTimeoutRatioNow() > timeoutRatioThreshold)
+			{
+				getLogger().warn(
+						"%s exceeded timeout ratio threshold. >%s (%s)",
+						mn.getSocketAddress().toString(), timeoutRatioThreshold, mn.getStatus());
+				lostConnection(mn);
+			}
 		}
 
 		// Deal with the memcached server group that's been added by CacheManager.  
@@ -361,8 +370,10 @@ public final class MemcachedConnection extends SpyObject {
 		SocketChannel ch = SocketChannel.open();
 		ch.configureBlocking(false);
 		// bufSize : 16384 (default value)
-		MemcachedNode qa = 
-				f.createMemcachedNode(sa, ch, f.getReadBufSize());
+		MemcachedNode qa = f.createMemcachedNode(sa, ch, f.getReadBufSize());
+		if (timeoutRatioThreshold > 0) {
+			qa.enableTimeoutRatio();
+		}
 		int ops = 0;
 		ch.socket().setTcpNoDelay(!f.useNagleAlgorithm());
 		ch.socket().setReuseAddress(true);
@@ -573,11 +584,6 @@ public final class MemcachedConnection extends SpyObject {
 		ByteBuffer rbuf=qa.getRbuf();
 		final SocketChannel channel = qa.getChannel();
 		int read=channel.read(rbuf);
-		if (read < 0) {
-		    // our model is to keep the connection alive for future ops
-		    // so we'll queue a reconnect if disconnected via an IOException
-		    throw new IOException("Disconnected unexpected, will reconnect.");
-		}
 		while(read > 0) {
 			getLogger().debug("Read %d bytes", read);
 			rbuf.flip();
@@ -598,6 +604,11 @@ public final class MemcachedConnection extends SpyObject {
 			}
 			rbuf.clear();
 			read=channel.read(rbuf);
+		}
+		if (read < 0) {
+		    // our model is to keep the connection alive for future ops
+		    // so we'll queue a reconnect if disconnected via an IOException
+		    throw new IOException("Disconnected unexpected, will reconnect.");
 		}
 	}
 
@@ -671,7 +682,7 @@ public final class MemcachedConnection extends SpyObject {
 			reconnectQueue.put(reconTime, qa);
 
 			// Need to do a little queue management.
-			qa.setupResend();
+			qa.setupResend(failureMode == FailureMode.Cancel);
 
 			if(failureMode == FailureMode.Redistribute) {
 				redistributeOperations(qa.destroyInputQueue());
@@ -942,7 +953,8 @@ public final class MemcachedConnection extends SpyObject {
             	LoggerFactory.getLogger(MemcachedConnection.class).debug("handling node for operation is not set");
             }
             else {
-                node.setContinuousTimeout(isTimeout);
+                if (isTimeout || !op.isCancelled())
+                    node.setContinuousTimeout(isTimeout);
             }
         } catch (Exception e) {
             LoggerFactory.getLogger(MemcachedConnection.class).error(e.getMessage());

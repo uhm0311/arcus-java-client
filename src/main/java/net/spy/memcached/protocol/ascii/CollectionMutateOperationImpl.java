@@ -79,9 +79,6 @@ public class CollectionMutateOperationImpl extends OperationImpl implements
   }
 
   public void handleLine(String line) {
-
-    OperationStatus status = null;
-
     /* ENABLE_REPLICATION if */
     if (hasSwitchedOver(line)) {
       receivedMoveOperations(line);
@@ -94,8 +91,9 @@ public class CollectionMutateOperationImpl extends OperationImpl implements
       Long.valueOf(line);
       getCallback().receivedStatus(new OperationStatus(true, line));
     } catch (NumberFormatException e) {
-      status = matchStatus(line, NOT_FOUND, NOT_FOUND_ELEMENT, TYPE_MISMATCH, BKEY_MISMATCH,
-              UNREADABLE, OVERFLOWED, OUT_OF_RANGE);
+      OperationStatus status = matchStatus(line, NOT_FOUND, NOT_FOUND_ELEMENT,
+              TYPE_MISMATCH, BKEY_MISMATCH, UNREADABLE, OVERFLOWED,
+              OUT_OF_RANGE);
 
       getLogger().debug(status);
       getCallback().receivedStatus(status);

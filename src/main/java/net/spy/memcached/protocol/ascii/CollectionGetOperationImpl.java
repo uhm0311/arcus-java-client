@@ -125,7 +125,9 @@ public class CollectionGetOperationImpl extends OperationImpl
       flags = Integer.parseInt(stuff[1]);
       count = Integer.parseInt(stuff[2]);
 
-      setReadType(OperationReadType.DATA);
+      if (count > 0) {
+        setReadType(OperationReadType.DATA);
+      }
     } else {
       OperationStatus status = matchStatus(line, END, TRIMMED, DELETED,
               DELETED_DROPPED, NOT_FOUND, NOT_FOUND_ELEMENT,
@@ -139,6 +141,13 @@ public class CollectionGetOperationImpl extends OperationImpl
 
   @Override
   public final void handleRead(ByteBuffer bb) {
+    readValue(bb);
+    if (count == 0) {
+      setReadType(OperationReadType.LINE);
+    }
+  }
+
+  private final void readValue(ByteBuffer bb) {
     // Decode a collection data header.
     if (lookingFor == '\0' && data == null) {
       for (int i = 0; bb.remaining() > 0; i++) {
@@ -168,25 +177,6 @@ public class CollectionGetOperationImpl extends OperationImpl
               break;
             }
           }
-        }
-
-        // Ready to finish.
-        if (b == '\r') {
-          continue;
-        }
-
-        // Finish the operation.
-        if (b == '\n') {
-          OperationStatus status = matchStatus(byteBuffer.toString(),
-                  END, TRIMMED, DELETED, DELETED_DROPPED, NOT_FOUND,
-                  NOT_FOUND_ELEMENT, OUT_OF_RANGE, TYPE_MISMATCH,
-                  BKEY_MISMATCH, UNREADABLE);
-
-          getLogger().debug("Get complete!");
-          getCallback().receivedStatus(status);
-          transitionState(OperationState.COMPLETE);
-          data = null;
-          break;
         }
 
         byteBuffer.write(b);
@@ -243,6 +233,7 @@ public class CollectionGetOperationImpl extends OperationImpl
       if (lookingFor == '\0') {
         data = null;
         readOffset = 0;
+        count--;
       }
     }
   }

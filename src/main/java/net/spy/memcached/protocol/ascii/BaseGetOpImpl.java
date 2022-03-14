@@ -64,6 +64,13 @@ abstract class BaseGetOpImpl extends OperationImpl {
 
   @Override
   public final void handleLine(String line) {
+    /*
+      VALUE <key> <flags> <bytes> [<cas unique>]\r\n
+      <data block>\r\n\
+      [ ... ]
+      END\r\n
+     */
+
     if (line.equals("END")) {
       getLogger().debug("Get complete!");
       getCallback().receivedStatus(END);

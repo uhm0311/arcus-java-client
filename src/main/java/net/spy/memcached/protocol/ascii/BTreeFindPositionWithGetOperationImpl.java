@@ -121,6 +121,13 @@ public class BTreeFindPositionWithGetOperationImpl extends OperationImpl impleme
 
   @Override
   public void handleRead(ByteBuffer bb) {
+    readValue(bb);
+    if (count == 0) {
+      setReadType(OperationReadType.LINE);
+    }
+  }
+
+  private final void readValue(ByteBuffer bb) {
     // Decode a data header.
     if (lookingFor == '\0' && data == null) {
       for (int i = 0; bb.remaining() > 0; i++) {
@@ -150,17 +157,6 @@ public class BTreeFindPositionWithGetOperationImpl extends OperationImpl impleme
             hasEFlag = null;
             break;
           }
-        } else if (b == '\r') { // Ready to finish.
-          continue;
-        } else if (b == '\n') { // Finish the operation.
-          OperationStatus status = matchStatus(byteBuffer.toString(), END,
-                  NOT_FOUND, NOT_FOUND_ELEMENT, UNREADABLE, TYPE_MISMATCH, BKEY_MISMATCH);
-
-          getLogger().debug("Get complete!");
-          getCallback().receivedStatus(status);
-          transitionState(OperationState.COMPLETE);
-          data = null;
-          break;
         }
 
         // Write to the result ByteBuffer
@@ -222,6 +218,7 @@ public class BTreeFindPositionWithGetOperationImpl extends OperationImpl impleme
       if (lookingFor == '\0') {
         data = null;
         readOffset = 0;
+        count--;
       }
     }
   }

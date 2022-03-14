@@ -78,12 +78,11 @@ final class MutatorOperationImpl extends OperationImpl
     }
     /* ENABLE_REPLICATION end */
 
-    OperationStatus status = null;
     try {
       Long.valueOf(line);
       getCallback().receivedStatus(new OperationStatus(true, line, StatusCode.SUCCESS));
     } catch (NumberFormatException e) {
-      status = matchStatus(line, NOT_FOUND, TYPE_MISMATCH);
+      OperationStatus status = matchStatus(line, NOT_FOUND, TYPE_MISMATCH);
       getCallback().receivedStatus(status);
     }
     transitionState(OperationState.COMPLETE);

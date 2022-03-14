@@ -90,6 +90,15 @@ public class BTreeSortMergeGetOperationOldImpl extends OperationImpl implements
     // Response header
     getLogger().debug("Got line %s", line);
 
+    /*
+      VALUE <ecount>\r\n
+      <key> <flags> <bkey> [<eflag>] <bytes> <data>\r\n
+      [ ... ]
+      MISSED_KEYS <kcount>\r\n
+      <key>\r\n
+      [ ... ]
+      END|DUPLICATED|TRIMMED|DUPLICATRED_TRIMMED\r\n
+     */
     if (line.startsWith("VALUE ")) {
       readState = 0;
 
@@ -130,6 +139,9 @@ public class BTreeSortMergeGetOperationOldImpl extends OperationImpl implements
     } else {
       readMissedKeys(bb);
     }
+    if (count == 0) {
+      setReadType(OperationReadType.LINE);
+    }
   }
 
   private final void readValue(ByteBuffer bb) {
@@ -160,33 +172,6 @@ public class BTreeSortMergeGetOperationOldImpl extends OperationImpl implements
             processedValueCount++;
             break;
           }
-        }
-
-        // Ready to finish.
-        if (b == '\r') {
-          continue;
-        }
-
-        // Finish the operation.
-        if (b == '\n') {
-
-          if ((new String(byteBuffer.toByteArray()))
-                  .startsWith("MISSED_KEYS")) {
-            readState = 1;
-            byteBuffer.reset();
-            spaceCount = 0;
-            return;
-          }
-
-          OperationStatus status = matchStatus(byteBuffer.toString(),
-                  END, TRIMMED, DUPLICATED, DUPLICATED_TRIMMED,
-                  OUT_OF_RANGE, ATTR_MISMATCH, TYPE_MISMATCH,
-                  BKEY_MISMATCH);
-
-          getCallback().receivedStatus(status);
-          //transitionState(OperationState.COMPLETE);
-          data = null;
-          break;
         }
 
         byteBuffer.write(b);
@@ -245,6 +230,7 @@ public class BTreeSortMergeGetOperationOldImpl extends OperationImpl implements
       if (lookingFor == '\0') {
         data = null;
         readOffset = 0;
+        count--;
       }
     }
   }
@@ -261,20 +247,11 @@ public class BTreeSortMergeGetOperationOldImpl extends OperationImpl implements
 
         // Finish the operation.
         if (b == '\n') {
-          OperationStatus status = matchStatus(byteBuffer.toString(),
-                  END, TRIMMED, DUPLICATED, DUPLICATED_TRIMMED,
-                  OUT_OF_RANGE, ATTR_MISMATCH, TYPE_MISMATCH,
-                  BKEY_MISMATCH);
+          ((BTreeSortMergeGetOperationOld.Callback) getCallback())
+                  .gotMissedKey(byteBuffer.toByteArray());
 
-          if (status.isSuccess()) {
-            getCallback().receivedStatus(status);
-            transitionState(OperationState.COMPLETE);
-            return;
-          } else {
-            ((BTreeSortMergeGetOperationOld.Callback) getCallback())
-                    .gotMissedKey(byteBuffer.toByteArray());
-          }
           byteBuffer.reset();
+          count--;
         } else {
           byteBuffer.write(b);
         }

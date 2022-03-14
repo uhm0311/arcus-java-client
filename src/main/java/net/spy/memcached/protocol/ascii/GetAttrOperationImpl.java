@@ -62,6 +62,12 @@ class GetAttrOperationImpl extends OperationImpl implements GetAttrOperation {
 
   @Override
   public void handleLine(String line) {
+    /*
+      ATTR <name>=<value>\r\n
+      ATTR <name>=<value>\r\n
+      [ ... ]
+      END\r\n
+     */
     if (line.startsWith("ATTR ")) {
       getLogger().debug("Got line %s", line);
 

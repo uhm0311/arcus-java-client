@@ -47,7 +47,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
       // 0, true).get(1000, TimeUnit.MILLISECONDS);
 
     System.out.println("Before sleep");
-    Thread.sleep(5000);
+    Thread.sleep(30000);
     System.out.println("After sleep");
   }
 

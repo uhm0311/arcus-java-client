@@ -45,13 +45,10 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
     mc.delete(key);
       // mc.asyncBopDelete(key, 0, 20000, ElementFlagFilter.DO_NOT_FILTER,
       // 0, true).get(1000, TimeUnit.MILLISECONDS);
-
-    System.out.println("Before sleep");
-    Thread.sleep(30000);
-    System.out.println("After sleep");
   }
 
   public void testBopGet_Maxcount() throws Exception {
+    System.out.println("testBopGet_Maxcount");
     // Test
     for (int maxcount = 100; maxcount <= 300; maxcount += 100) {
       // Create a B+ Tree
@@ -80,6 +77,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_Overflow() throws Exception {
+    System.out.println("testBopGet_Overflow");
     // Create a B+ Tree
     mc.asyncBopInsert(key, 0, null, "item0", new CollectionAttributes());
 
@@ -115,6 +113,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_LargestTrim() throws Exception {
+    System.out.println("testBopGet_LargestTrim");
     // Create a B+ Tree
     mc.asyncBopInsert(key, 0, null, "item0", new CollectionAttributes());
 
@@ -150,6 +149,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_SmallestTrim() throws Exception {
+    System.out.println("testBopGet_SmallestTrim");
     // Create a B+ Tree
     mc.asyncBopInsert(key, 0, null, "item0", new CollectionAttributes());
 
@@ -192,6 +192,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_SmallestTrim_OutOfRange() throws Exception {
+    System.out.println("testBopGet_SmallestTrim_OutOfRange");
     // Create a set
     mc.asyncBopInsert(key, 1, null, "item1", new CollectionAttributes());
 
@@ -209,6 +210,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_LargestTrim_OutOfRange() throws Exception {
+    System.out.println("testBopGet_LargestTrim_OutOfRange");
     // Create a set
     mc.asyncBopInsert(key, 1, null, "item1", new CollectionAttributes());
 
@@ -226,6 +228,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_AvailableOverflowAction() throws Exception {
+    System.out.println("testBopGet_AvailableOverflowAction");
     // Create a set
     mc.asyncBopInsert(key, 0, null, "item0", new CollectionAttributes());
 
@@ -260,6 +263,7 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
   }
 
   public void testBopGet_notAvailableOverflowAction() {
+    System.out.println("testBopGet_notAvailableOverflowAction");
     CollectionAttributes attributesForCreate = new CollectionAttributes();
 
     // create

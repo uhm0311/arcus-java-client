@@ -45,6 +45,10 @@ public class BopOverflowActionTest extends BaseIntegrationTest {
     mc.delete(key);
       // mc.asyncBopDelete(key, 0, 20000, ElementFlagFilter.DO_NOT_FILTER,
       // 0, true).get(1000, TimeUnit.MILLISECONDS);
+
+    System.out.println("Before sleep");
+    Thread.sleep(5000);
+    System.out.println("After sleep");
   }
 
   public void testBopGet_Maxcount() throws Exception {

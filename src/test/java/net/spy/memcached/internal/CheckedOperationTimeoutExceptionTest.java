@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import junit.framework.TestCase;
 import net.spy.memcached.MockMemcachedNode;
@@ -33,14 +33,16 @@ public class CheckedOperationTimeoutExceptionTest extends TestCase {
   public void testSingleOperation() {
     Operation op = buildOp(11211);
     assertEquals(CheckedOperationTimeoutException.class.getName()
-                    + ": test - failing node: localhost:11211 [WRITE_QUEUED] [MOCK_STATE]",
+                    + ": test - failing node: localhost:11211 [TestOperation{hashCode="
+                    + op.hashCode() + ", state=WRITE_QUEUED}] [MOCK_STATE]",
             new CheckedOperationTimeoutException("test", op).toString());
   }
 
   public void testNullNode() {
     Operation op = new TestOperation();
     assertEquals(CheckedOperationTimeoutException.class.getName()
-                    + ": test - failing node: <unknown> [WRITE_QUEUED]",
+                    + ": test - failing node: <unknown> [TestOperation{hashCode="
+                    + op.hashCode() + ", state=WRITE_QUEUED}]",
             new CheckedOperationTimeoutException("test", op).toString());
   }
 
@@ -53,12 +55,14 @@ public class CheckedOperationTimeoutExceptionTest extends TestCase {
 
 
   public void testMultipleOperation() {
-    Collection<Operation> ops = new ArrayList<Operation>();
+    List<Operation> ops = new ArrayList<Operation>();
     ops.add(buildOp(11211));
     ops.add(buildOp(64212));
     assertEquals(CheckedOperationTimeoutException.class.getName()
-                    + ": test - failing nodes: localhost:11211 [WRITE_QUEUED] [MOCK_STATE], "
-                    + "localhost:64212 [WRITE_QUEUED] [MOCK_STATE]",
+                    + ": test - failing nodes: localhost:11211 [TestOperation{hashCode="
+                    + ops.get(0).hashCode() + ", state=WRITE_QUEUED}] [MOCK_STATE], "
+                    + "localhost:64212 [TestOperation{hashCode="
+                    + ops.get(1).hashCode() + ", state=WRITE_QUEUED}] [MOCK_STATE]",
             new CheckedOperationTimeoutException("test", ops).toString());
   }
 

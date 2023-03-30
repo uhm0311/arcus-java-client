@@ -97,9 +97,9 @@ public abstract class BaseOperationImpl extends SpyObject {
   public final void cancel(String cause) {
     cancelled = true;
     if (handlingNode != null) {
-      cancelCause = "Cancelled (" + cause + " : (" + handlingNode.getNodeName() + ")" + ")";
+      cancelCause = "Cancelled [" + cause + " : (" + this + ") (" + handlingNode + ")]";
     } else {
-      cancelCause = "Cancelled (" + cause + ")";
+      cancelCause = "Cancelled [" + cause + " : (" + this + ")]";
     }
     wasCancelled();
     callback.complete();

@@ -14,13 +14,20 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    name: JDK ${{ matrix.jdk }}, ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        jdk: [ 8, 11, 17 ]
+        os: [ ubuntu-20.04 ]
+      fail-fast: true
+      max-parallel: 3
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 8
+      - name: Set up JDK ${{ matrix.jdk }}
         uses: actions/setup-java@v2
         with:
-          java-version: '8'
+          java-version: ${{ matrix.jdk }}
           distribution: 'temurin'
           cache: 'maven'
       - name: Update apt-get

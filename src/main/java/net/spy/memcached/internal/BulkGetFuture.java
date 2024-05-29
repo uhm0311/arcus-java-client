@@ -25,9 +25,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.OperationTimeoutException;
+import net.spy.memcached.TimedOutMessageFactory;
 import net.spy.memcached.compat.log.LoggerFactory;
 import net.spy.memcached.internal.result.GetResult;
 import net.spy.memcached.ops.Operation;
@@ -86,12 +88,17 @@ public class BulkGetFuture<T> implements BulkFuture<Map<String, T>> {
   @Override
   public Map<String, T> getSome(long duration, TimeUnit units)
           throws InterruptedException, ExecutionException {
+
+    AtomicLong beforeAwait = new AtomicLong(0);
     Collection<Operation> timedoutOps = new HashSet<>();
-    Map<String, T> ret = internalGet(duration, units, timedoutOps);
+
+    Map<String, T> ret = internalGet(duration, units, beforeAwait, timedoutOps);
     if (!timedoutOps.isEmpty()) {
       isTimeout.set(true);
-      LoggerFactory.getLogger(getClass()).warn(
-              new CheckedOperationTimeoutException(duration, units, timedoutOps).getMessage());
+      String message = TimedOutMessageFactory.createTimedoutMessage(
+              beforeAwait.get(), duration, units, ops);
+
+      LoggerFactory.getLogger(getClass()).warn(message);
     }
     return ret;
 
@@ -106,11 +113,14 @@ public class BulkGetFuture<T> implements BulkFuture<Map<String, T>> {
   @Override
   public Map<String, T> get(long duration, TimeUnit units)
           throws InterruptedException, ExecutionException, TimeoutException {
+
+    AtomicLong beforeAwait = new AtomicLong(0);
     Collection<Operation> timedoutOps = new HashSet<>();
-    Map<String, T> ret = internalGet(duration, units, timedoutOps);
+
+    Map<String, T> ret = internalGet(duration, units, beforeAwait, timedoutOps);
     if (!timedoutOps.isEmpty()) {
       isTimeout.set(true);
-      throw new CheckedOperationTimeoutException(duration, units, timedoutOps);
+      throw new CheckedOperationTimeoutException(beforeAwait.get(), duration, units, timedoutOps);
     }
     return ret;
   }
@@ -140,8 +150,11 @@ public class BulkGetFuture<T> implements BulkFuture<Map<String, T>> {
    * TimeUnit)
    */
   private Map<String, T> internalGet(long to, TimeUnit unit,
+                                     AtomicLong beforeAwait,
                                      Collection<Operation> timedoutOps)
            throws InterruptedException, ExecutionException {
+
+    beforeAwait.set(System.nanoTime());
     if (!latch.await(to, unit)) {
       for (Operation op : ops) {
         if (op.getState() != OperationState.COMPLETE) {

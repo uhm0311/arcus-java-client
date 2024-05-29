@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -726,11 +725,14 @@ public class ArcusTimeoutMessageTest extends TestCase {
   }
 
   private String createTimedoutMessage(Operation op) {
-    return TimedOutMessageFactory
-            .createTimedoutMessage(1, TimeUnit.MILLISECONDS, Collections.singletonList(op));
+    return TimedOutMessageFactory.createTimedoutMessage(0, 1, TimeUnit.MILLISECONDS, op);
   }
 
   private String getTimedoutHeadMessage(String message) {
-    return message.split("-")[0];
+    String[] tokens = message.split("-")[0].split(" >= ");
+    String token = tokens[0];
+
+    token = token.substring(0, token.lastIndexOf('('));
+    return token + "( >= " + tokens[1];
   }
 }

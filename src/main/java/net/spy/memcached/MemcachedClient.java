@@ -1674,9 +1674,11 @@ public class MemcachedClient extends SpyThread
       }
     }));
     try {
+      long beforeAwait = System.nanoTime();
       if (!latch.await(operationTimeout, TimeUnit.MILLISECONDS)) {
         op.cancel("by applcation.");
-        throw new OperationTimeoutException(operationTimeout, TimeUnit.MILLISECONDS, op);
+        throw new OperationTimeoutException(
+                beforeAwait, operationTimeout, TimeUnit.MILLISECONDS, op);
       }
     } catch (InterruptedException e) {
       op.cancel("by applcation.");

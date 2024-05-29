@@ -57,6 +57,7 @@ public final class SMGetFuture<T extends List<?>> implements Future<T> {
   public T get(long duration, TimeUnit units)
           throws InterruptedException, TimeoutException, ExecutionException {
 
+    long beforeAwait = System.nanoTime();
     if (!latch.await(duration, units)) {
       Collection<Operation> timedoutOps = new HashSet<>();
       for (Operation op : ops) {
@@ -68,7 +69,7 @@ public final class SMGetFuture<T extends List<?>> implements Future<T> {
       }
       if (!timedoutOps.isEmpty()) {
         MemcachedConnection.opsTimedOut(timedoutOps);
-        throw new CheckedOperationTimeoutException(duration, units, timedoutOps);
+        throw new CheckedOperationTimeoutException(beforeAwait, duration, units, timedoutOps);
       }
     } else {
       // continuous timeout counter will be reset

@@ -54,6 +54,8 @@ public class BroadcastFuture<T> extends OperationFuture<T> {
   @Override
   public T get(long duration, TimeUnit units)
           throws InterruptedException, TimeoutException, ExecutionException {
+
+    long beforeAwait = System.nanoTime();
     if (!latch.await(duration, units)) {
       // whenever timeout occurs, continuous timeout counter will increase by 1.
       Collection<Operation> timedoutOps = new HashSet<>();
@@ -66,7 +68,7 @@ public class BroadcastFuture<T> extends OperationFuture<T> {
         }
       }
       if (!timedoutOps.isEmpty()) {
-        throw new CheckedOperationTimeoutException(duration, units, timedoutOps);
+        throw new CheckedOperationTimeoutException(beforeAwait, duration, units, timedoutOps);
       }
     } else {
       // continuous timeout counter will be reset

@@ -1,6 +1,7 @@
 package net.spy.memcached;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.ops.DeleteOperation;
@@ -12,9 +13,19 @@ public final class TimedOutMessageFactory {
   private TimedOutMessageFactory() {
   }
 
-  public static String createTimedoutMessage(long duration,
+  public static String createTimedoutMessage(long beforeAwait,
+                                             long duration,
+                                             TimeUnit units,
+                                             Operation op) {
+
+    return createTimedoutMessage(beforeAwait, duration, units, Collections.singletonList(op));
+  }
+
+  public static String createTimedoutMessage(long beforeAwait,
+                                             long duration,
                                              TimeUnit units,
                                              Collection<Operation> ops) {
+
     StringBuilder rv = new StringBuilder();
     Operation firstOp = ops.iterator().next();
     if (isBulkOperation(firstOp, ops)) {
@@ -23,8 +34,12 @@ public final class TimedOutMessageFactory {
     if (firstOp.isPipeOperation()) {
       rv.append("pipe ");
     }
+
+    long elapsed = convertUnit(System.nanoTime() - beforeAwait, units);
+
     rv.append(firstOp.getAPIType())
-      .append(" operation timed out (>").append(duration)
+      .append(" operation timed out (").append(elapsed)
+      .append(" >= ").append(duration)
       .append(" ").append(units).append(")");
     return createMessage(rv.toString(), ops);
   }
@@ -66,6 +81,10 @@ public final class TimedOutMessageFactory {
       }
     }
     return rv.toString();
+  }
+
+  private static long convertUnit(long nanos, TimeUnit unit) {
+    return unit.convert(nanos, TimeUnit.NANOSECONDS);
   }
 
 }

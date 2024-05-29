@@ -17,7 +17,6 @@
 package net.spy.memcached;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.ops.Operation;
@@ -44,17 +43,19 @@ public class OperationTimeoutException extends RuntimeException {
     super(message, cause);
   }
 
-  public OperationTimeoutException(long duration,
+  public OperationTimeoutException(long beforeAwait,
+                                   long duration,
                                    TimeUnit units,
                                    Operation op) {
     super(TimedOutMessageFactory
-            .createTimedoutMessage(duration, units, Collections.singleton(op)));
+            .createTimedoutMessage(beforeAwait, duration, units, op));
   }
 
-  public OperationTimeoutException(long duration,
+  public OperationTimeoutException(long beforeAwait,
+                                   long duration,
                                    TimeUnit units,
                                    Collection<Operation> ops) {
     super(TimedOutMessageFactory
-            .createTimedoutMessage(duration, units, ops));
+            .createTimedoutMessage(beforeAwait, duration, units, ops));
   }
 }

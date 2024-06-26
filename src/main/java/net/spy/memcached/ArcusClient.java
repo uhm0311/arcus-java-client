@@ -224,8 +224,7 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
   public static ArcusClient createArcusClient(String hostPorts, String serviceCode,
                                               ConnectionFactoryBuilder cfb) {
 
-    return ArcusClient.createArcusClient(hostPorts, serviceCode, cfb, 1, 10000).getClient();
-
+    return ArcusClient.createArcusClient(hostPorts, serviceCode, cfb, 1, 10000);
   }
 
   /**
@@ -236,8 +235,21 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
   public static ArcusClient createArcusClient(String serviceCode,
                                               ConnectionFactoryBuilder cfb) {
 
-    return ArcusClient.createArcusClient(ARCUS_CLOUD_ADDR, serviceCode, cfb, 1, 10000).getClient();
+    return ArcusClient.createArcusClient(ARCUS_CLOUD_ADDR, serviceCode, cfb, 1, 10000);
+  }
 
+  public static ArcusClient createArcusClient(ConnectionFactoryBuilder cfb,
+                                              String name, List<InetSocketAddress> addrs) throws IOException {
+
+    ArcusClient[] client = new ArcusClient[]{new ArcusClient(cfb.build(), name, addrs)};
+    return new ArcusClientPool(1, client);
+  }
+
+  public static ArcusClient createArcusClient(ConnectionFactoryBuilder cfb,
+                                              List<InetSocketAddress> addrs) throws IOException {
+
+    ArcusClient[] client = new ArcusClient[]{new ArcusClient(cfb.build(), addrs)};
+    return new ArcusClientPool(1, client);
   }
 
   /**
@@ -319,7 +331,7 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param addrs socket addresses for the memcached servers
    * @throws IOException if connections cannot be established
    */
-  public ArcusClient(ConnectionFactory cf, String name, List<InetSocketAddress> addrs)
+  private ArcusClient(ConnectionFactory cf, String name, List<InetSocketAddress> addrs)
           throws IOException {
     super(cf, name, addrs);
 
@@ -340,9 +352,15 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param addrs socket addresses for the memcached servers
    * @throws IOException if connections cannot be established
    */
-  public ArcusClient(ConnectionFactory cf, List<InetSocketAddress> addrs)
-          throws IOException {
+  private ArcusClient(ConnectionFactory cf, List<InetSocketAddress> addrs) throws IOException {
     this(cf, DEFAULT_ARCUS_CLIENT_NAME + "-" + CLIENT_ID.getAndIncrement(), addrs);
+  }
+
+  protected ArcusClient(ConnectionFactory cf) {
+    super(cf);
+
+    collectionTranscoder = null;
+    smgetKeyChunkSize = 0;
   }
 
   @SuppressWarnings("removal")
@@ -801,10 +819,11 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param co              transcoded value
    * @return future holding the success/failure of the operation
    */
-  <T> CollectionFuture<Boolean> asyncCollectionInsert(final String key,
-                                                      final String subkey,
-                                                      final CollectionInsert<T> collectionInsert,
-                                                      final CachedData co) {
+  private <T> CollectionFuture<Boolean> asyncCollectionInsert(final String key,
+                                                              final String subkey,
+                                                              final CollectionInsert<T> collectionInsert,
+                                                              final CachedData co) {
+
     final CountDownLatch latch = new CountDownLatch(1);
     final CollectionFuture<Boolean> rv = new CollectionFuture<>(
             latch, operationTimeout);
@@ -848,7 +867,7 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param updateList list of operation parameters (values and so on)
    * @return future holding the success/failure codes of individual operations and their index
    */
-  <T> CollectionFuture<Map<Integer, CollectionOperationStatus>> asyncCollectionPipedUpdate(
+  private <T> CollectionFuture<Map<Integer, CollectionOperationStatus>> asyncCollectionPipedUpdate(
           final String key, final List<CollectionPipedUpdate<T>> updateList) {
 
     final CountDownLatch latch = new CountDownLatch(updateList.size());
@@ -1259,8 +1278,8 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param collectionCreate operation parameters (flags, expiration time, and so on)
    * @return future holding the success/failure of the operation
    */
-  CollectionFuture<Boolean> asyncCollectionCreate(final String key,
-                                                  final CollectionCreate collectionCreate) {
+  private CollectionFuture<Boolean> asyncCollectionCreate(final String key,
+                                                          final CollectionCreate collectionCreate) {
     final CountDownLatch latch = new CountDownLatch(1);
     final CollectionFuture<Boolean> rv = new CollectionFuture<>(
             latch, operationTimeout);
@@ -3232,7 +3251,7 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
    * @param insertList list of operation parameters (element values and so on)
    * @return future holding the map of element index and the result of its insert operation
    */
-  <T> CollectionFuture<Map<Integer, CollectionOperationStatus>> asyncCollectionPipedInsert(
+  private <T> CollectionFuture<Map<Integer, CollectionOperationStatus>> asyncCollectionPipedInsert(
           final String key, final List<CollectionPipedInsert<T>> insertList) {
 
     final CountDownLatch latch = new CountDownLatch(insertList.size());

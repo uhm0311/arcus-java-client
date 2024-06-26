@@ -37,7 +37,8 @@ public class ArcusClientCreateTest {
 
   @Test
   public void testCreateClientWithCustomName() throws IOException {
-    ArcusClient arcusClient = new ArcusClient(new DefaultConnectionFactory(), clientName, addrs);
+    ArcusClient arcusClient = ArcusClient.createArcusClient(
+            TestConnectionFactoryBuilder.CreateDefault(), clientName, addrs);
 
     Collection<MemcachedNode> nodes = arcusClient.getAllNodes();
     MemcachedNode node = nodes.iterator().next();
@@ -48,7 +49,8 @@ public class ArcusClientCreateTest {
 
   @Test
   public void testCreateClientWithDefaultName() throws IOException {
-    ArcusClient arcusClient = new ArcusClient(new DefaultConnectionFactory(), addrs);
+    ArcusClient arcusClient = ArcusClient.createArcusClient(
+            TestConnectionFactoryBuilder.CreateDefault(), addrs);
 
     Collection<MemcachedNode> nodes = arcusClient.getAllNodes();
     Assert.assertEquals(nodes.size(), 1);
@@ -61,6 +63,7 @@ public class ArcusClientCreateTest {
 
   @Test(expected = NullPointerException.class)
   public void testCreateClientNullName() throws IOException {
-    new ArcusClient(new DefaultConnectionFactory(), null, addrs);
+    ConnectionFactoryBuilder cfb = TestConnectionFactoryBuilder.CreateDefault();
+    ArcusClient arcusClient = ArcusClient.createArcusClient(cfb, null, addrs);
   }
 }

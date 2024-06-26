@@ -47,20 +47,23 @@ import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.internal.SMGetFuture;
 import net.spy.memcached.ops.CollectionOperationStatus;
+import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StoreType;
+import net.spy.memcached.plugin.LocalCacheManager;
 import net.spy.memcached.transcoders.Transcoder;
 
 /**
  * Bags for ArcusClient
  */
-public class ArcusClientPool implements MemcachedClientIF, ArcusClientIF {
+public class ArcusClientPool extends ArcusClient implements MemcachedClientIF, ArcusClientIF {
 
   private final int poolSize;
   private final ArcusClient[] client;
   private final Random rand;
 
   public ArcusClientPool(int poolSize, ArcusClient[] client) {
+    super(client.length > 0 ? client[0].cf : new DefaultConnectionFactory());
 
     this.poolSize = poolSize;
     this.client = client;
@@ -446,6 +449,12 @@ public class ArcusClientPool implements MemcachedClientIF, ArcusClientIF {
     return this.getClient().asyncDecr(key, by, def, exp);
   }
 
+  @Deprecated
+  @Override
+  public OperationFuture<Boolean> delete(String key, int hold) {
+    return this.getClient().delete(key, hold);
+  }
+
   @Override
   public OperationFuture<Boolean> delete(String key) {
     return this.getClient().delete(key);
@@ -474,6 +483,21 @@ public class ArcusClientPool implements MemcachedClientIF, ArcusClientIF {
   @Override
   public boolean removeObserver(ConnectionObserver obs) {
     return this.getClient().removeObserver(obs);
+  }
+
+  @Override
+  public void connectionEstablished(SocketAddress sa, int reconnectCount) {
+    this.getClient().connectionEstablished(sa, reconnectCount);
+  }
+
+  @Override
+  public void connectionLost(SocketAddress sa) {
+    this.getClient().connectionLost(sa);
+  }
+
+  @Override
+  public MemcachedConnection getMemcachedConnection() {
+    return this.getClient().getMemcachedConnection();
   }
 
   @Override
@@ -1595,4 +1619,43 @@ public class ArcusClientPool implements MemcachedClientIF, ArcusClientIF {
             value, attributesForCreate, transcoder);
   }
 
+  @Override
+  public LocalCacheManager getLocalCacheManager() {
+    return this.getClient().getLocalCacheManager();
+  }
+
+  @Override
+  protected Operation addOp(String key, Operation op) {
+    return this.getClient().addOp(key, op);
+  }
+
+  @Override
+  protected Operation addOp(MemcachedNode node, Operation op) {
+    return this.getClient().addOp(node, op);
+  }
+
+  @Override
+  protected void addOpMap(Map<String, Operation> opMap) {
+    this.getClient().addOpMap(opMap);
+  }
+
+  @Override
+  protected void checkState() {
+    this.getClient().checkState();
+  }
+
+  @Override
+  protected void validateKey(String key) {
+    this.getClient().validateKey(key);
+  }
+
+  @Override
+  protected int getAddedQueueSize() {
+    return this.getClient().getAddedQueueSize();
+  }
+
+  @Override
+  protected Collection<MemcachedNode> getAllNodes() {
+    return this.getClient().getAllNodes();
+  }
 }

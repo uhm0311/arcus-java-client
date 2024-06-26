@@ -76,6 +76,10 @@ public class FrontCacheMemcachedClient extends MemcachedClient {
     }
   }
 
+  protected FrontCacheMemcachedClient(ConnectionFactory cf) {
+    super(cf);
+  }
+
   /**
    * Get the value of the key.
    * Check the local cache first. If the key is not found, send the command to the server.

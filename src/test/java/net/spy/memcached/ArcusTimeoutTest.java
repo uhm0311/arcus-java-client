@@ -59,17 +59,11 @@ public class ArcusTimeoutTest extends TestCase {
   }
 
   private void initClient() throws IOException {
-    mc = new ArcusClient(new DefaultConnectionFactory() {
-      @Override
-      public long getOperationTimeout() {
-        return 1;
-      }
-
-      @Override
-      public FailureMode getFailureMode() {
-        return FailureMode.Retry;
-      }
-    }, AddrUtil.getAddresses("0.0.0.0:23456"));
+    mc = ArcusClient.createArcusClient(
+            new ConnectionFactoryBuilder()
+                    .setOpTimeout(1)
+                    .setFailureMode(FailureMode.Retry),
+            AddrUtil.getAddresses("0.0.0.0:23456"));
   }
 
   @After

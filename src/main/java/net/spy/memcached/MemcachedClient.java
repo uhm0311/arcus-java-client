@@ -141,6 +141,8 @@ public class MemcachedClient extends SpyThread
 
   private final AuthThreadMonitor authMonitor = new AuthThreadMonitor();
 
+  protected final ConnectionFactory cf;
+
   /**
    * Get a memcache client operating on the specified memcached locations.
    *
@@ -225,6 +227,22 @@ public class MemcachedClient extends SpyThread
     setName("Memcached IO over " + conn);
     setDaemon(cf.isDaemon());
     start();
+
+    this.cf = cf;
+  }
+
+  protected MemcachedClient(ConnectionFactory cf) {
+    if (cf == null) {
+      throw new IllegalArgumentException("ConnectionFactory is null.");
+    }
+
+    operationTimeout = 0;
+    conn = null;
+    opFact = cf.getOperationFactory();
+    transcoder = null;
+    authDescriptor = null;
+    delimiter = '\0';
+    this.cf = cf;
   }
 
   /**
@@ -2060,7 +2078,7 @@ public class MemcachedClient extends SpyThread
    * Infinitely loop processing IO.
    */
   @Override
-  public void run() {
+  public final void run() {
     while (running) {
       try {
         conn.handleIO();
@@ -2229,7 +2247,7 @@ public class MemcachedClient extends SpyThread
    *
    * @return current added queue size
    */
-  int getAddedQueueSize() {
+  protected int getAddedQueueSize() {
     return conn.getAddedQueueSize();
   }
 

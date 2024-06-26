@@ -71,7 +71,8 @@ public class ArcusTimeoutMessageTest extends TestCase {
   private void initClient() throws IOException {
     List<InetSocketAddress> addresses = AddrUtil.getAddresses("0.0.0.0:23456");
     addresses.add(AddrUtil.getAddresses("0.0.0.0:23457").get(0));
-    mc = new ArcusClient(new DefaultConnectionFactory() {
+
+    ConnectionFactory cf = new DefaultConnectionFactory() {
       @Override
       public long getOperationTimeout() {
         return 1;
@@ -81,7 +82,8 @@ public class ArcusTimeoutMessageTest extends TestCase {
       public FailureMode getFailureMode() {
         return FailureMode.Retry;
       }
-    }, addresses);
+    };
+    mc = ArcusClient.createArcusClient(new TestConnectionFactoryBuilder(cf), addresses);
   }
 
   @After

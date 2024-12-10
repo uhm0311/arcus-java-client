@@ -22,10 +22,10 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.Collection;
 
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ssl.NioSslClient;
 
 public class MockMemcachedNode implements MemcachedNode {
   private final InetSocketAddress socketAddress;
@@ -153,11 +153,11 @@ public class MockMemcachedNode implements MemcachedNode {
     return 0;
   }
 
-  public void setChannel(SocketChannel to) {
+  public void setChannel(NioSslClient to) {
     // noop
   }
 
-  public SocketChannel getChannel() {
+  public NioSslClient getChannel() {
     return null;
   }
 

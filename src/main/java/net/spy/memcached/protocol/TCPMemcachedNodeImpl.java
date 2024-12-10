@@ -22,7 +22,6 @@ import java.net.SocketAddress;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.StringTokenizer;
@@ -42,6 +41,7 @@ import net.spy.memcached.MemcachedReplicaGroup;
 import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
+import net.spy.memcached.ssl.NioSslClient;
 
 /**
  * Represents a node with the memcached cluster, along with buffering and
@@ -60,7 +60,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
   private final long opQueueMaxBlockTime;
   private final AtomicInteger reconnectAttempt = new AtomicInteger(1);
   private boolean isFirstConnecting = true;
-  private SocketChannel channel;
+  private NioSslClient channel;
   private int toWrite = 0;
   protected Operation optimizedOp = null;
   private volatile SelectionKey sk = null;
@@ -481,13 +481,13 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
             + ", interested=" + sops + "}";
   }
 
-  public final void setChannel(SocketChannel to) {
+  public final void setChannel(NioSslClient to) {
     assert channel == null || !channel.isOpen()
             : "Attempting to overwrite channel";
     channel = to;
   }
 
-  public final SocketChannel getChannel() {
+  public final NioSslClient getChannel() {
     return channel;
   }
 

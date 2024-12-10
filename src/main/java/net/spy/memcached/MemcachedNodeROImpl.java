@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.Collection;
 
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ssl.NioSslClient;
 
 public final class MemcachedNodeROImpl implements MemcachedNode {
 
@@ -81,7 +81,7 @@ public final class MemcachedNodeROImpl implements MemcachedNode {
     return root.getBytesRemainingToWrite();
   }
 
-  public SocketChannel getChannel() {
+  public NioSslClient getChannel() {
     throw new UnsupportedOperationException();
   }
 
@@ -145,7 +145,7 @@ public final class MemcachedNodeROImpl implements MemcachedNode {
     throw new UnsupportedOperationException();
   }
 
-  public void setChannel(SocketChannel to) {
+  public void setChannel(NioSslClient to) {
     throw new UnsupportedOperationException();
   }
 

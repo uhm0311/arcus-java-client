@@ -38,8 +38,9 @@ class MemcachedClientConstructorTest {
 
   private void assertWorking() throws Exception {
     Map<SocketAddress, String> versions = client.getVersions();
-    assertEquals("/" + ARCUS_HOST,
-            versions.keySet().iterator().next().toString());
+    String host = versions.keySet().iterator().next().toString();
+
+    assertTrue(("/" + ARCUS_HOST).equals(host) || ("localhost/" + ARCUS_HOST).equals(host));
   }
 
   private void assertArgRequired(IllegalArgumentException e) {

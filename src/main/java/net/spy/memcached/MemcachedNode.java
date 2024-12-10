@@ -21,10 +21,10 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.Collection;
 
 import net.spy.memcached.ops.Operation;
+import net.spy.memcached.ssl.NioSslClient;
 
 /**
  * Interface defining a connection to a memcached server.
@@ -182,14 +182,14 @@ public interface MemcachedNode {
   int getReconnectCount();
 
   /**
-   * Set the SocketChannel this node uses.
+   * Set the NioSslClient this node uses.
    */
-  void setChannel(SocketChannel to);
+  void setChannel(NioSslClient to);
 
   /**
-   * Get the SocketChannel for this connection.
+   * Get the NioSslClient for this connection.
    */
-  SocketChannel getChannel();
+  NioSslClient getChannel();
 
   /**
    * Set the selection key for this node.

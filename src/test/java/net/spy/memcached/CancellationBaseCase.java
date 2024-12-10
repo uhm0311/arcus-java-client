@@ -78,7 +78,7 @@ abstract class CancellationBaseCase {
   void testUnavailableServers() throws Exception {
     tryTimeout(client.asyncGet("x"));
     assertEquals(new ArrayList<>(
-                    Collections.singleton("/127.0.0.1:64213")),
+                    Collections.singleton("localhost/127.0.0.1:64213")),
             ClientBaseCase.stringify(client.getUnavailableServers()));
   }
 

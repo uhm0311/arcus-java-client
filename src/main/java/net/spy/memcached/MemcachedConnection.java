@@ -29,7 +29,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +56,7 @@ import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ssl.NioSslClient;
 
 /**
  * Connection to a cluster of memcached servers.
@@ -630,11 +630,7 @@ public final class MemcachedConnection extends SpyObject {
       qa.enableTimeoutRatio();
     }
 
-    SocketChannel ch = SocketChannel.open();
-    ch.configureBlocking(false);
-    ch.socket().setTcpNoDelay(!connFactory.useNagleAlgorithm());
-    ch.socket().setKeepAlive(connFactory.getKeepAlive());
-    ch.socket().setReuseAddress(true);
+    NioSslClient ch = new NioSslClient((InetSocketAddress) sa, connFactory);
     /* The codes above can be replaced by the codes below since java 1.7 */
     // ch.setOption(StandardSocketOptions.TCP_NODELAY, !f.useNagleAlgorithm());
     // ch.setOption(StandardSocketOptions.SO_REUSEADDR, true);
@@ -643,7 +639,7 @@ public final class MemcachedConnection extends SpyObject {
     // Initially I had attempted to skirt this by queueing every
     // connect, but it considerably slowed down start time.
     try {
-      if (ch.connect(sa)) {
+      if (ch.connect()) {
         getLogger().info("new memcached node connected to %s immediately", qa);
         connected(qa);
       } else {
@@ -911,7 +907,7 @@ public final class MemcachedConnection extends SpyObject {
               sk.isConnectable(), sk.attachment());
       if (sk.isConnectable()) {
         getLogger().info("Connection state changed for %s", qa);
-        final SocketChannel channel = qa.getChannel();
+        final NioSslClient channel = qa.getChannel();
         if (channel.finishConnect()) {
           connected(qa);
           addedQueue.offer(qa);
@@ -980,7 +976,7 @@ public final class MemcachedConnection extends SpyObject {
           throws IOException {
     Operation currentOp = qa.getCurrentReadOp();
     ByteBuffer rbuf = qa.getRbuf();
-    final SocketChannel channel = qa.getChannel();
+    final NioSslClient channel = qa.getChannel();
     int read = channel.read(rbuf);
     while (read > 0) {
       getLogger().debug("Read %d bytes", read);
@@ -1284,7 +1280,7 @@ public final class MemcachedConnection extends SpyObject {
   private void attemptReconnects() {
     final List<MemcachedNode> rereQueue = new ArrayList<>();
     final long nanoTime = System.nanoTime();
-    SocketChannel ch = null;
+    NioSslClient ch = null;
     MemcachedNode node = reconnectQueue.popReady(nanoTime);
     while (node != null) {
       if (node.getChannel() != null) {
@@ -1297,17 +1293,13 @@ public final class MemcachedConnection extends SpyObject {
       }
       try {
         getLogger().info("Reconnecting %s", node);
-        ch = SocketChannel.open();
-        ch.configureBlocking(false);
-        ch.socket().setTcpNoDelay(!connFactory.useNagleAlgorithm());
-        ch.socket().setKeepAlive(connFactory.getKeepAlive());
-        ch.socket().setReuseAddress(true);
+        ch = new NioSslClient((InetSocketAddress) node.getSocketAddress(), connFactory);
         /* The codes above can be replaced by the codes below since java 1.7 */
         // ch.setOption(StandardSocketOptions.TCP_NODELAY, !f.useNagleAlgorithm());
         // ch.setOption(StandardSocketOptions.SO_REUSEADDR, true);
         node.setChannel(ch);
         int ops = 0;
-        if (ch.connect(node.getSocketAddress())) {
+        if (ch.connect()) {
           getLogger().info("Immediately reconnected to %s", node);
           connected(node);
           addedQueue.offer(node);

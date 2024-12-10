@@ -139,6 +139,7 @@ public final class BTreeSortMergeGetOperationImpl extends OperationImpl implemen
         setReadType(OperationReadType.DATA);
       }
     } else {
+      System.out.println("line in handleLine: " + line);
       OperationStatus status = matchStatus(line, END, TRIMMED,
               DUPLICATED, DUPLICATED_TRIMMED, OUT_OF_RANGE,
               ATTR_MISMATCH, TYPE_MISMATCH, BKEY_MISMATCH);
@@ -325,6 +326,7 @@ public final class BTreeSortMergeGetOperationImpl extends OperationImpl implemen
           } else if (count < lineCount) {
             // <key> [<cause>]\r\n
             String line = byteBuffer.toString();
+            System.out.println("line in <key> [<cause>]: " + line);
             String[] chunk = line.split(" ");
             if (chunk.length == 2) {
               ((BTreeSortMergeGetOperation.Callback) getCallback())
@@ -373,7 +375,10 @@ public final class BTreeSortMergeGetOperationImpl extends OperationImpl implemen
 
         // Finish the operation.
         if (b == '\n') {
-          OperationStatus status = matchStatus(byteBuffer.toString(),
+          String l = byteBuffer.toString();
+          System.out.println("line in readTrimmedKeys: " + l);
+
+          OperationStatus status = matchStatus(l,
                   END, DUPLICATED, OUT_OF_RANGE, ATTR_MISMATCH,
                   TYPE_MISMATCH, BKEY_MISMATCH);
 

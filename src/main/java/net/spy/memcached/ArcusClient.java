@@ -1133,12 +1133,15 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
     for (final String key : keyList) {
       Operation op = opFact.delete(key, new OperationCallback() {
           public void receivedStatus(OperationStatus val) {
+            System.out.println("receivedStatus: " + val);
+
             if (!val.isSuccess()) {
               rv.addFailedResult(key, val);
             }
           }
 
           public void complete() {
+            System.out.println("compelete");
             latch.countDown();
           }
       });
@@ -2017,6 +2020,7 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
 
         @Override
         public void receivedStatus(OperationStatus status) {
+          System.out.println("receivedStatus: " + status);
           final int processed = processedSMGetCount.decrementAndGet();
 
           if (status.isSuccess()) {
@@ -2036,11 +2040,14 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
 
         @Override
         public void complete() {
+          System.out.println("complete");
           blatch.countDown();
         }
 
         @Override
         public void gotData(String key, int flags, Object bkey, byte[] eflag, byte[] data) {
+          System.out.println("godData: " + key + ", " + bkey);
+
           if (stopCollect.get()) {
             return;
           }
@@ -2056,6 +2063,8 @@ public class ArcusClient extends FrontCacheMemcachedClient implements ArcusClien
 
         @Override
         public void gotMissedKey(byte[] data) {
+          System.out.println("gotMissedKey: " + new String(data));
+
           OperationStatus status = new OperationStatus(false, "UNDEFINED");
           result.addMissedKey(new String(data), new CollectionOperationStatus(status));
         }

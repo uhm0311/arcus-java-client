@@ -10,6 +10,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.security.KeyStore;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -115,6 +116,7 @@ public final class NioSslClient extends SpyObject {
           socketChannel.write(myNetData);
         }
 
+        System.out.println("writing: " + new String(buffer.array(), position, buffer.position() - position));
         return buffer.position() - position;
       case BUFFER_OVERFLOW:
         myNetData = enlargePacketBuffer(myNetData);
@@ -161,6 +163,8 @@ public final class NioSslClient extends SpyObject {
         data[i] = readBuffer.poll();
       }
 
+      System.out.println("remain raw: " + Arrays.toString(data));
+      System.out.println("remain: " + new String(data));
       buffer.put(data);
       return size;
     }
@@ -190,6 +194,7 @@ public final class NioSslClient extends SpyObject {
 
             if (!peerAppData.hasRemaining()) {
               peerAppData.clear();
+              break;
             }
             if (!buffer.hasRemaining()) {
               while (peerAppData.hasRemaining()) {
@@ -420,11 +425,18 @@ public final class NioSslClient extends SpyObject {
     int fremain = from.remaining();
     int toremain = to.remaining();
     if (fremain > toremain) {
-      for (int i = 0; i < toremain; i++) {
+      System.out.println("reading (fremain > toremain): " + toString(from, toremain));
+      int i = 0;
+      for (; i < toremain; i++) {
         to.put(from.get());
       }
+      //System.out.println("last value of from: " + from.get(toremain - 1));
       return toremain;
     } else {
+      if (from.limit() > 0) {
+        //System.out.println("last value of from: " + from.get(fremain - 1));
+      }
+      System.out.println("reading (fremain <= toremain): " + toString(from));
       to.put(from);
       return fremain;
     }
